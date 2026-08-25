@@ -1,0 +1,109 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# A PR superseded by a newer push does not need to finish.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: test (py${{ matrix.python }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10          # the suite runs in ~2s; anything near this is a hang
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Sync dependencies
+        run: uv sync --python ${{ matrix.python }}
+
+      - name: Lint
+        run: uv run ruff check brain/ tests/
+
+      - name: Type-check (strict)
+        run: uv run mypy brain/
+
+      - name: Tests
+        run: uv run pytest tests/ -q --durations=10
+
+  coverage:
+    name: coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv sync
+      - name: Coverage (fails under 85%)
+        run: >
+          uv run --with pytest-cov pytest tests/ -q
+          --cov=brain --cov-report=term-missing --cov-fail-under=85
+
+  guards:
+    name: repo guards
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      # .coverage was committed once and made a PR unmergeable, because git
+      # cannot reconcile a binary file. Catch it at the door instead.
+      - name: No build artifacts committed
+        run: |
+          if git ls-files | grep -Ei '^\.coverage|\.db$|\.db-wal$|\.db-shm$|__pycache__|\.pyc$'; then
+            echo "::error::build artifact committed, see the list above"
+            exit 1
+          fi
+          echo "no build artifacts tracked"
+
+      # The derived index must never be treated as canonical.
+      - name: Index is not tracked
+        run: |
+          if git ls-files | grep -E '90-meta/indexes/'; then
+            echo "::error::the derived index is committed; it must stay disposable"
+            exit 1
+          fi
+          echo "index not tracked"
+
+  isolation:
+    name: tests cannot reach a real vault
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv sync
+
+      # A failing test run once wrote fixture notes into a live vault, because
+      # an unset --vault fell through to $BRAIN_VAULT. Run the suite with that
+      # variable pointed at a decoy and assert nothing lands in it.
+      - name: Suite ignores an ambient BRAIN_VAULT
+        env:
+          BRAIN_VAULT: /tmp/decoy-vault
+        run: |
+          mkdir -p /tmp/decoy-vault/10-knowledge /tmp/decoy-vault/90-meta
+          uv run pytest tests/ -q
+          found=$(find /tmp/decoy-vault -name '*.md' | wc -l)
+          if [ "$found" -ne 0 ]; then
+            echo "::error::the suite wrote $found file(s) into the ambient vault"
+            find /tmp/decoy-vault -name '*.md'
+            exit 1
+          fi
+          echo "decoy vault untouched"

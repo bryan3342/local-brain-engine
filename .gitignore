@@ -1,0 +1,26 @@
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+dist/
+build/
+*.egg-info/
+# derived index, disposable by contract, never canonical
+*.db
+*.db-shm
+*.db-wal
+.DS_Store
+
+# coverage artifacts, build output, never source
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Obsidian config, if a vault is ever opened here by mistake
+.obsidian/
+
+# property-test cache
+.hypothesis/
