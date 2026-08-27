@@ -84,7 +84,8 @@ def test_sync_stores_no_vectors_when_no_embedder_is_attached(tmp_path: Path) -> 
 def test_deleting_the_database_reproduces_identical_vectors(tmp_path: Path) -> None:
     """The same guarantee the FTS index already carries, extended to vectors.
 
-    Would fail if a vector were ever derived from anything but the Markdown, an insertion counter, a timestamp, a row id.
+    Would fail if a vector were ever derived from anything but the Markdown,
+    an insertion counter, a timestamp, a row id.
     """
     api = build(tmp_path, StubEmbedder())
     populate(api)
