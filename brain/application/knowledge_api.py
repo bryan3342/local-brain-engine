@@ -468,7 +468,8 @@ class KnowledgeApi:
                 if target in known:
                     graph.edges.append(record)
                 elif is_anchor(target):
-                    # A file, PR, skill or domain. Not a note, but a real node, # and the join that makes multi-hop queries work, because two
+                    # A file, PR, skill or domain. Not a note, but a real node,
+                    # and the join that makes multi-hop queries work, because two
                     # sessions that touched the same file connect through it.
                     if target not in anchors:
                         kind = anchor_kind(target)

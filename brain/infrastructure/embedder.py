@@ -1,7 +1,8 @@
 """The seam between the vault and whatever produces dense vectors.
 
 Kept as a protocol with no default implementation on purpose. The index, the
-CLI and the retrieval hook all have to work when nothing here is reachable, the hook fires on every prompt typed, and a personal knowledge base that stops
+CLI and the retrieval hook all have to work when nothing here is reachable,
+the hook fires on every prompt typed, and a personal knowledge base that stops
 answering because a model is down has traded a real guarantee for a marginal
 one. So `None` is a first-class value everywhere an embedder is accepted, and
 absence degrades to keyword retrieval rather than raising.
