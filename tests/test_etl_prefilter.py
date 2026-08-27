@@ -192,7 +192,9 @@ def test_classify_prefers_cwd_derived_project_over_the_mangled_project_column() 
     while `cwd` carries the unmangled path for every row. `cwd` must win."""
     cwd = ("/home/dev/code/Obsidian/Desktop/Agentic_AI_Factory/"
            "07_Work_Notes/Acme/acme/infra")
-    candidate, rejection = classify(row(project="subagents", cwd=cwd), seen=set(), reported=set(), rules=RULES)
+    candidate, rejection = classify(
+        row(project="subagents", cwd=cwd), seen=set(), reported=set(), rules=RULES
+    )
     assert rejection is None
     assert candidate is not None
     assert candidate.project == "acme"

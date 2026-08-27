@@ -255,7 +255,8 @@ def test_check_without_a_baseline_does_not_claim_a_regression(api: KnowledgeApi)
 
 def test_check_reports_a_paired_test_not_just_a_delta(tmp_path: Path) -> None:
     """35 queries give a 31-point-wide CI on precision@1, so a raw delta is not
-    evidence. The same queries run every time, so the comparison is *paired*, McNemar's exact test on the win/loss table is the honest statistic
+    evidence. The same queries run every time, so the comparison is *paired*,
+    McNemar's exact test on the win/loss table is the honest statistic
     (Smucker, Allan & Carterette, CIKM 2007).
 
     A one-question flip must NOT come back significant. If it ever does, the

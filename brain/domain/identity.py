@@ -19,8 +19,8 @@ from __future__ import annotations
 import hashlib
 import re
 import unicodedata
-from dataclasses import dataclass
 from collections.abc import Iterable
+from dataclasses import dataclass
 
 from brain.domain.enums import NoteType
 
