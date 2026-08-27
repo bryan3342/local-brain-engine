@@ -430,7 +430,6 @@ def _unit(vector: Sequence[float]) -> list[float]:
     return [x / norm for x in vector] if norm else [0.0] * len(vector)
 
 
-
 #: Words carrying no retrieval signal. A query OR-ing these matches essentially
 #: every note, and the genuinely rare terms get buried under the pile, which is
 #: how "can I push straight to main?" returned an unrelated PR note.
@@ -445,7 +444,8 @@ STOPWORDS: frozenset[str] = frozenset({
 })
 
 
-#: How much note body reaches the embedder. Long notes dilute a single vector, #: every extra paragraph pulls the centroid toward whatever the note mentions in
+#: How much note body reaches the embedder. Long notes dilute a single vector,
+#: every extra paragraph pulls the centroid toward whatever the note mentions in
 #: passing, and embedding models degrade past their trained window anyway. Four
 #: thousand bytes covers the whole of almost every note in a vault of atomic
 #: claims; per-section vectors are the answer for the rest, not a bigger cap.
