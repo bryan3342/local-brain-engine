@@ -74,7 +74,10 @@ def _line(item: Any) -> str:
         if "title" in item and "id" in item:
             answer = item.get("answer") or item.get("snippet") or ""
             answer = (answer[:100] + "…") if len(answer) > 100 else answer
-            return f"{item['id']:<52} {item['title']}" + (f"\n{'':<52} {answer}" if answer else "")
+            return (
+                f"{item['id']:<52} {item['title']}"
+                + (f"\n{'':<52} {answer}" if answer else "")
+            )
         return json.dumps(item, ensure_ascii=False, default=str)
     return str(item)
 
@@ -89,7 +92,10 @@ def _print_stale(stale: list[str]) -> None:
     """
     if not stale:
         return
-    print(f"⚠ {len(stale)} expected note(s) do not exist, fix the golden set, not the vault:")
+    print(
+        f"⚠ {len(stale)} expected note(s) do not exist, "
+        "fix the golden set, not the vault:"
+    )
     for note_id in stale:
         print(f"    {note_id}")
     print()
@@ -122,18 +128,27 @@ def build_parser() -> argparse.ArgumentParser:
     # Global flags live on a parent parser so they are accepted either before or
     # after the subcommand. `brain reindex --json` is what people actually type.
     # SUPPRESS is load-bearing: the subparser inherits these actions, and with a
-    # normal default it would reset a flag the top-level parser already set, # silently turning `brain --json list` back off. With SUPPRESS the attribute
+    # normal default it would reset a flag the top-level parser already set,
+    # silently turning `brain --json list` back off. With SUPPRESS the attribute
     # is written only where the user actually passed it; _defaults() fills the rest.
     globals_ = argparse.ArgumentParser(add_help=False)
-    globals_.add_argument("--vault", default=argparse.SUPPRESS,
-                          help="vault root (default: $BRAIN_VAULT)")
-    globals_.add_argument("--json", action="store_true", default=argparse.SUPPRESS,
-                          help="emit JSON")
-    globals_.add_argument("--no-index", action="store_true", default=argparse.SUPPRESS,
-                          help="bypass the derived index (proves it is disposable)")
+    globals_.add_argument(
+        "--vault", default=argparse.SUPPRESS,
+        help="vault root (default: $BRAIN_VAULT)"
+    )
+    globals_.add_argument(
+        "--json", action="store_true", default=argparse.SUPPRESS,
+        help="emit JSON"
+    )
+    globals_.add_argument(
+        "--no-index", action="store_true", default=argparse.SUPPRESS,
+        help="bypass the derived index (proves it is disposable)"
+    )
 
-    p = argparse.ArgumentParser(prog="brain", parents=[globals_],
-                                description="Local-first personal knowledge OS.")
+    p = argparse.ArgumentParser(
+        prog="brain", parents=[globals_],
+        description="Local-first personal knowledge OS."
+    )
     sub = p.add_subparsers(dest="command", required=True, parser_class=_Sub(globals_))
 
     sub.add_parser("init", help="create the vault skeleton")
@@ -154,7 +169,9 @@ def build_parser() -> argparse.ArgumentParser:
     g.add_argument("ref")
     g.add_argument("--body", action="store_true")
 
-    u = sub.add_parser("update", help="update frontmatter (body is never touched)")
+    u = sub.add_parser(
+        "update", help="update frontmatter (body is never touched)"
+    )
     u.add_argument("ref")
     u.add_argument("--title")
     u.add_argument("--status")
@@ -203,35 +220,53 @@ def build_parser() -> argparse.ArgumentParser:
     ri.add_argument("--full", action="store_true")
 
     sc = sub.add_parser("scan", help="report files the API did not write")
-    sc.add_argument("--advisory", action="store_true",
-                    help="include advisory findings such as type/folder mismatch")
+    sc.add_argument(
+        "--advisory", action="store_true",
+        help="include advisory findings such as type/folder mismatch"
+    )
 
     doc = sub.add_parser("doctor", help="propose (or apply) repairs")
-    doc.add_argument("--apply", action="store_true", help="actually write the repairs")
+    doc.add_argument(
+        "--apply", action="store_true", help="actually write the repairs"
+    )
 
     ev = sub.add_parser("eval", help="score retrieval against the golden query set")
-    ev.add_argument("--golden", default=None,
-                    help="path to golden.jsonl (default: <vault>/90-meta/eval/golden.jsonl)")
+    ev.add_argument(
+        "--golden", default=None,
+        help="path to golden.jsonl (default: <vault>/90-meta/eval/golden.jsonl)"
+    )
     ev.add_argument("-k", type=int, default=5, help="how deep a hit still counts")
-    ev.add_argument("--misses-only", action="store_true", help="print only the failures")
-    ev.add_argument("--coverage", action="store_true",
-                    help="list notes no golden query retrieves")
-    ev.add_argument("--save-baseline", action="store_true",
-                    help="record the current score as the bar to beat")
-    ev.add_argument("--check", action="store_true",
-                    help="compare against the saved baseline; non-zero if it regressed")
+    ev.add_argument(
+        "--misses-only", action="store_true", help="print only the failures"
+    )
+    ev.add_argument(
+        "--coverage", action="store_true",
+        help="list notes no golden query retrieves"
+    )
+    ev.add_argument(
+        "--save-baseline", action="store_true",
+        help="record the current score as the bar to beat"
+    )
+    ev.add_argument(
+        "--check", action="store_true",
+        help="compare against the saved baseline; non-zero if it regressed"
+    )
 
     es = sub.add_parser("etl-scan", help="read new sessions into the ETL queue")
     es.add_argument("--limit", type=int, default=500)
-    es.add_argument("--db", default=None, help="episodic-memory db (default: standard path)")
+    es.add_argument(
+        "--db", default=None, help="episodic-memory db (default: standard path)"
+    )
 
     sub.add_parser("etl-status", help="how much work is queued")
 
     # No --folder or --status here, ever: placement is apply()'s decision, not
     # the skill's. That is the entire point of this subcommand existing
     # instead of the skill calling `create` with model-authored argv.
-    ed = sub.add_parser("etl-draft",
-                        help="write a reconciled note from a queued candidate")
+    ed = sub.add_parser(
+        "etl-draft",
+        help="write a reconciled note from a queued candidate"
+    )
     ed.add_argument("--candidate-id", required=True)
     ed.add_argument("--title", required=True)
     ed.add_argument("--type", default="concept")
@@ -243,13 +278,19 @@ def build_parser() -> argparse.ArgumentParser:
     # Placement is still not the caller's to choose -- this names WHICH note the
     # new one contradicts, not where either of them lives. The archive happens
     # at promotion, when a human agrees.
-    ed.add_argument("--supersedes", default=None, metavar="NOTE_ID",
-                    help="id of a note this one contradicts and should replace")
+    ed.add_argument(
+        "--supersedes", default=None, metavar="NOTE_ID",
+        help="id of a note this one contradicts and should replace"
+    )
 
-    rv = sub.add_parser("etl-revert",
-                        help="undo the aliases one ETL session added")
-    rv.add_argument("--session", required=True,
-                    help="source session id, as recorded in the audit log")
+    rv = sub.add_parser(
+        "etl-revert",
+        help="undo the aliases one ETL session added"
+    )
+    rv.add_argument(
+        "--session", required=True,
+        help="source session id, as recorded in the audit log"
+    )
 
     sub.add_parser("inbox", help="list candidates awaiting promotion")
 
@@ -295,12 +336,14 @@ def main(argv: list[str] | None = None) -> int:
         elif cmd == "get":
             _emit(api.get_note(args.ref).to_dict(include_body=args.body), args.json)
         elif cmd == "update":
-            note = api.update_note(args.ref, title=args.title, status=args.status,
-                                   domain=args.domain, tags=args.tag, aliases=args.alias)
+            note = api.update_note(
+                args.ref, title=args.title, status=args.status,
+                domain=args.domain, tags=args.tag, aliases=args.alias)
             _emit(note.to_dict(), args.json)
         elif cmd == "rename":
-            _emit(api.rename_note(args.ref, args.new_title,
-                                  dest_folder=args.folder).to_dict(), args.json)
+            _emit(api.rename_note(
+                args.ref, args.new_title,
+                dest_folder=args.folder).to_dict(), args.json)
         elif cmd == "delete":
             _emit(api.delete_note(args.ref, hard=args.hard), args.json)
         elif cmd == "list":
@@ -308,11 +351,18 @@ def main(argv: list[str] | None = None) -> int:
                 note_type=args.type, domain=args.domain,
                 status=args.status, limit=args.limit)], args.json)
         elif cmd == "search":
-            _emit([h.to_dict() for h in api.search_notes(args.query, limit=args.limit)], args.json)
+            _emit(
+                [h.to_dict() for h in api.search_notes(args.query, limit=args.limit)],
+                args.json
+            )
         elif cmd == "link":
-            _emit(api.link_notes(args.src, args.rel, args.dst).to_dict(), args.json)
+            _emit(
+                api.link_notes(args.src, args.rel, args.dst).to_dict(), args.json
+            )
         elif cmd == "unlink":
-            _emit(api.unlink_notes(args.src, args.rel, args.dst).to_dict(), args.json)
+            _emit(
+                api.unlink_notes(args.src, args.rel, args.dst).to_dict(), args.json
+            )
         elif cmd == "backlinks":
             _emit([b.to_dict() for b in api.get_backlinks(args.ref)], args.json)
         elif cmd == "neighbors":
@@ -338,7 +388,10 @@ def main(argv: list[str] | None = None) -> int:
                 unresolved_expectations,
             )
 
-            golden = Path(args.golden) if args.golden else api.vault.root / GOLDEN_PATH
+            golden = (
+                Path(args.golden) if args.golden
+                else api.vault.root / GOLDEN_PATH
+            )
             cases = load_cases(golden)
             stale = list(unresolved_expectations(api, cases))
             if args.save_baseline:
@@ -370,19 +423,25 @@ def main(argv: list[str] | None = None) -> int:
             # and knows the vocabulary already indexed, so it scores well for a
             # reason that is not retrieval quality. An explicit --golden still
             # gets the flat single-set shape a script would be parsing.
-            sets = ([(golden.stem, golden)] if args.golden
-                    else discover_eval_sets(api.vault.root) or [(golden.stem, golden)])
+            sets = (
+                [(golden.stem, golden)] if args.golden
+                else discover_eval_sets(api.vault.root) or [(golden.stem, golden)]
+            )
             scored = []
             for name, path in sets:
                 set_cases = cases if path == golden else load_cases(path)
-                set_stale = stale if path == golden else list(
-                    unresolved_expectations(api, set_cases))
+                set_stale = (
+                    stale if path == golden
+                    else list(unresolved_expectations(api, set_cases))
+                )
                 scored.append((name, evaluate(api, set_cases, k=args.k), set_stale))
 
             if args.json:
                 if args.golden:
                     _, report, set_stale = scored[0]
-                    _emit({**report.to_dict(), "stale_expectations": set_stale}, True)
+                    _emit(
+                        {**report.to_dict(), "stale_expectations": set_stale}, True
+                    )
                 else:
                     _emit({"sets": {name: {**report.to_dict(),
                                            "stale_expectations": set_stale}
@@ -399,8 +458,10 @@ def main(argv: list[str] | None = None) -> int:
             from brain.etl.extract import scan
             from brain.etl.queue import Queue
 
-            stats = scan(api, Queue(api.vault),
-                         db_path=Path(args.db) if args.db else None, limit=args.limit)
+            stats = scan(
+                api, Queue(api.vault),
+                db_path=Path(args.db) if args.db else None, limit=args.limit
+            )
             _emit(stats, args.json)
         elif cmd == "etl-status":
             from brain.etl.queue import Queue
